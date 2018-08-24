@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
 
 public class Window {
 
@@ -33,7 +34,9 @@ public class Window {
 	String currentInput;
 	String earthContent;
 	String marsContent;
+	JTextArea instructionsText;
 	ArrayList<JLabel> visualStates;
+	JLayeredPane statesPanel;
 	JPanel earthScientist;
 	JPanel marsScientist;
 	JPanel earthContentPanel;
@@ -52,9 +55,9 @@ public class Window {
 	}
 	
 	public void updateCurrentState(String nextState) {
+		clearVisualStates();
 		currentState = currentState.replace("q", "");
 		int stateNumber = Integer.parseInt(currentState);
-		visualStates.get(stateNumber).setVisible(false);
 		currentState = nextState;
 		nextState = nextState.replace("q", "");
 		stateNumber = Integer.parseInt(nextState);
@@ -68,13 +71,14 @@ public class Window {
 	}
 	
 	public void showSolution(int solution) {
-		ArrayList<State> lowSolution = algo.lowestSolutionVisitedStates.get(solution);
+		ArrayList<State> lowSolution = algo.lowestVisualStates.get(solution);
 		currentState = "q0";
 		clearVisualStates();
 		for(int i = 0 ; i < lowSolution.size() ; i++) {
 			String state = lowSolution.get(i).getStateNumber().replace("q", "");
 			int stateNumber = Integer.parseInt(state);
 			visualStates.get(stateNumber).setVisible(true);
+			visualStates.get(stateNumber).repaint();
 		}
 	}	
 	
@@ -446,7 +450,7 @@ public class Window {
 			}
 		}
 		if(!found) {
-			JOptionPane.showMessageDialog(null, "Input is not valid! Game Over.");
+			JOptionPane.showMessageDialog(null, "Something gets eaten! Game Over.");
 			resetGame();
 		}
 	}
@@ -504,19 +508,30 @@ public class Window {
 			for(int j = 0 ; j < algo.lowestSolutionInputs.get(i).size() ; j++) {
 				solutionString += algo.lowestSolutionInputs.get(i).get(j) + " ";
 			}
-			JPanel solutionContainer = new JPanel();
-			JTextArea solution = new JTextArea(solutionString);
-			solution.setEditable(false);
-			solutionContainer.add(solution);
+			JButton solutionContainer = new JButton();
+			
+			solutionContainer.setText(solutionString);
 			solutionContainer.setName(Integer.toString(i));
 			solutionContainer.setBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(0, 0, 0)));
-			solutionContainer.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseEntered(MouseEvent arg0) {
-					showSolution(Integer.parseInt(solutionContainer.getName()));
-				}
-				public void mouseExited(MouseEvent arg0) {
+			solutionContainer.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
 					resetGame();
+					showSolution(Integer.parseInt(solutionContainer.getName()));
+					String[] inputs = solutionContainer.getText().split(" ");
+					String instructions = "";
+					for(int i = 0 ; i < inputs.length ; i++) {
+						instructions += (i+1)+".) Bring ";
+						if(inputs[i].length() > 1) {
+							instructions += inputs[i].charAt(0) + " and " + inputs[i].charAt(1)+"\n";
+						}else {
+							instructions += inputs[i]+"\n";
+						}
+					}
+					instructions = instructions.replaceAll("H", "Human");
+					instructions = instructions.replaceAll("L", "Lion");
+					instructions = instructions.replaceAll("C", "Cow");
+					instructions = instructions.replaceAll("G", "Grain");
+					instructionsText.setText(instructions);
 				}
 			});
 			solutionPanel.add(solutionContainer);
@@ -530,6 +545,7 @@ public class Window {
 		solutionPanel.removeAll();
 		solutionPanel.revalidate();
 		solutionPanel.repaint();
+		instructionsText.setText("");
 	}	
 
 	private void initialize() {
@@ -586,15 +602,15 @@ public class Window {
 		JPanel panel_4 = new JPanel();
 		panel.add(panel_4);
 		
-		JButton btnNewButton_1 = new JButton("SHOW ALL SOLUTIONS");
+		JButton btnNewButton_1 = new JButton("SOLUTIONS");
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				btnNewButton_1.setText("HIDE ALL SOLUTIONS");
+				btnNewButton_1.setText("HIDE");
 				if(!shownSolution) {
 					showAllSolutions();
 					shownSolution = true;
 				}else{
-					btnNewButton_1.setText("SHOW ALL SOLUTIONS");
+					btnNewButton_1.setText("SOLUTIONS");
 					hideAllSolutions();
 					shownSolution = false;
 				}
@@ -604,20 +620,21 @@ public class Window {
 		JScrollPane scrollPane = new JScrollPane();
 		GroupLayout gl_panel_4 = new GroupLayout(panel_4);
 		gl_panel_4.setHorizontalGroup(
-			gl_panel_4.createParallelGroup(Alignment.TRAILING)
-				.addGroup(gl_panel_4.createSequentialGroup()
+			gl_panel_4.createParallelGroup(Alignment.LEADING)
+				.addGroup(Alignment.TRAILING, gl_panel_4.createSequentialGroup()
 					.addContainerGap()
-					.addGroup(gl_panel_4.createParallelGroup(Alignment.TRAILING)
-						.addComponent(scrollPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 599, Short.MAX_VALUE)
-						.addComponent(btnNewButton_1, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 599, Short.MAX_VALUE))
-					.addContainerGap())
+					.addComponent(btnNewButton_1, GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE)
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(scrollPane, GroupLayout.PREFERRED_SIZE, 461, GroupLayout.PREFERRED_SIZE)
+					.addGap(18))
 		);
 		gl_panel_4.setVerticalGroup(
 			gl_panel_4.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_panel_4.createSequentialGroup()
-					.addComponent(btnNewButton_1)
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 78, Short.MAX_VALUE)
+					.addContainerGap()
+					.addGroup(gl_panel_4.createParallelGroup(Alignment.LEADING)
+						.addComponent(scrollPane, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE)
+						.addComponent(btnNewButton_1, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE))
 					.addContainerGap())
 		);
 		
@@ -627,12 +644,32 @@ public class Window {
 		
 		JPanel panel_5 = new JPanel();
 		panel.add(panel_5);
-		panel_5.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		
+		JScrollPane scrollPane_1 = new JScrollPane();
+		GroupLayout gl_panel_5 = new GroupLayout(panel_5);
+		gl_panel_5.setHorizontalGroup(
+			gl_panel_5.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_panel_5.createSequentialGroup()
+					.addContainerGap()
+					.addComponent(scrollPane_1, GroupLayout.DEFAULT_SIZE, 599, Short.MAX_VALUE)
+					.addContainerGap())
+		);
+		gl_panel_5.setVerticalGroup(
+			gl_panel_5.createParallelGroup(Alignment.LEADING)
+				.addGroup(Alignment.TRAILING, gl_panel_5.createSequentialGroup()
+					.addContainerGap()
+					.addComponent(scrollPane_1, GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE)
+					.addContainerGap())
+		);
+		
+		instructionsText = new JTextArea();
+		scrollPane_1.setViewportView(instructionsText);
+		panel_5.setLayout(gl_panel_5);
 		controlPanel.setLayout(gl_controlPanel);
 		
 		JPanel automatonPanel = new JPanel();
 		
-		JLayeredPane statesPanel = new JLayeredPane();
+		statesPanel = new JLayeredPane();
 		statesPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		GroupLayout gl_automatonPanel = new GroupLayout(automatonPanel);
 		gl_automatonPanel.setHorizontalGroup(
@@ -847,6 +884,10 @@ public class Window {
 		carryButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				transition(currentInput);
+				System.out.println(currentState);
+				if(currentState.equals("q13")) {
+					JOptionPane.showMessageDialog(null, "You win!");
+				}
 			}
 		});
 		
