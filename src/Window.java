@@ -611,6 +611,8 @@ public class Window {
 					shownSolution = true;
 				}else{
 					btnNewButton_1.setText("SOLUTIONS");
+					clearVisualStates();
+					updateCurrentState(currentState);
 					hideAllSolutions();
 					shownSolution = false;
 				}
