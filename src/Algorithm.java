@@ -40,11 +40,11 @@ public class Algorithm{
 	// Recursive function
 	public void recursiveSearch(State state, ArrayList<State> alreadyVisited, ArrayList<String> inputSolution) {
 		if(!state.isFinal) {
-			for(int i = 0 ; i < state.getTransitions().size() ; i++) { // Loop through all the transitions
+			for(int i = 0 ; i < state.getTransitions().size() ; i++) { // Loop through all the transitions of the current state
 				String nextState = state.getTransitions().get(i).getDestination().replace("q", "");
 				int stateNumber = Integer.parseInt(nextState);
 				State newState = automaton.getStates().get(stateNumber);
-				if(!alreadyVisited.contains(newState)) { // If the destination of the transition is already visited, ignore the transition
+				if(!alreadyVisited.contains(newState)) { // If the destination of the transition is already visited, it ignores the transition
 					// Add the destination state to the visited states, and call the recursive function on the destination state
 					alreadyVisited.add(newState);
 					inputSolution.add(state.getTransitions().get(i).getInput());
